@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>Scène 01 — Compteur de visiteurs | Ask-It</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0F0F0F;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Conteneur principal 1920×1080 ── */
+    .scene {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at center, #1A1A1A 0%, #0F0F0F 70%);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ── Grille de points (dot grid) ── */
+    .dot-grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+    }
+
+    /* ── Conteneur particules ── */
+    .particles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ── Bloc compteur centré ── */
+    .counter-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      will-change: transform;
+    }
+
+    /* ── Animation de scale du compteur ── */
+    @keyframes counterScale {
+      0%   { transform: translate(-50%, -50%) scale(1); }
+      100% { transform: translate(-50%, -50%) scale(1.15); }
+    }
+    .counter-wrapper.animate {
+      animation: counterScale 2.5s ease-out forwards;
+    }
+
+    /* ── Rangée de chiffres ── */
+    .odometer {
+      display: flex;
+      align-items: center;
+      height: 170px; /* hauteur visible d'un chiffre */
+    }
+
+    /* ── Colonne odometer ── */
+    .odometer-digit {
+      width: 90px;
+      height: 170px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Bande verticale de chiffres (0-9) ── */
+    .odometer-digit .digit-strip {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      transition: none;
+      will-change: transform;
+    }
+
+    .odometer-digit .digit-strip span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 170px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 900;
+      font-size: 140px;
+      color: #FFFFFF;
+      text-shadow:
+        0 0 40px rgba(219, 20, 60, 0.25),
+        0 0 80px rgba(219, 20, 60, 0.1);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* ── Séparateur de milliers (espace) ── */
+    .odometer-space {
+      width: 36px;
+      height: 170px;
+    }
+
+    /* ── Sous-texte ── */
+    .subtitle {
+      margin-top: 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 28px;
+      color: #888888;
+      opacity: 0;
+      will-change: opacity;
+    }
+
+    @keyframes fadeIn {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .subtitle.animate {
+      animation: fadeIn 0.5s ease-out 1.5s forwards;
+    }
+
+    /* ── Particule ── */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: #FFFFFF;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <!-- Grille de points -->
+    <div class="dot-grid"></div>
+
+    <!-- Particules (générées par JS) -->
+    <canvas id="particleCanvas" class="particles"></canvas>
+
+    <!-- Compteur -->
+    <div class="counter-wrapper" id="counterWrapper">
+      <div class="odometer" id="odometer">
+        <!-- Colonnes générées par JS : format "47 832" → indices [4, 7, ' ', 8, 3, 2] -->
+      </div>
+      <div class="subtitle" id="subtitle">visiteurs aujourd'hui</div>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================================
+       CONFIGURATION
+    ================================================================ */
+    const TARGET_VALUE  = 47832;
+    const DURATION_MS   = 3000;   // durée totale
+    const SCENE_W       = 1920;
+    const SCENE_H       = 1080;
+    const PARTICLE_COUNT = 36;
+
+    /* ================================================================
+       EASING — accélère puis ralentit (ease-in-out personnalisé)
+       On veut : 0→2s accélère, 2→3s ralentit
+       Utilisons une courbe cubique qui concentre la vitesse au milieu
+    ================================================================ */
+    function easeCounter(t) {
+      // Custom easing: slow start, fast middle, slow end (with most deceleration in last third)
+      if (t < 0.667) {
+        // First 2 seconds (0→0.667): accelerating — cubic ease-in
+        const localT = t / 0.667;
+        return 0.5 * (localT * localT * localT);
+      } else {
+        // Last 1 second (0.667→1): decelerating — ease-out
+        const localT = (t - 0.667) / 0.333;
+        const inv = 1 - localT;
+        return 0.5 + 0.5 * (1 - inv * inv * inv);
+      }
+    }
+
+    /* ================================================================
+       FORMAT : 47832 → ["4","7"," ","8","3","2"]
+    ================================================================ */
+    function formatNumber(n) {
+      const s = Math.round(n).toString();
+      const padded = s.padStart(5, '0'); // au moins 5 chiffres
+      // Insérer espace après le 2e chiffre (pour "47 832")
+      const parts = [];
+      const len = padded.length;
+      // Séparer par groupes de 3 depuis la droite
+      let groups = [];
+      for (let i = len; i > 0; i -= 3) {
+        groups.unshift(padded.slice(Math.max(0, i - 3), i));
+      }
+      for (let g = 0; g < groups.length; g++) {
+        for (const ch of groups[g]) {
+          parts.push(ch);
+        }
+        if (g < groups.length - 1) parts.push(' ');
+      }
+      return parts;
+    }
+
+    /* ================================================================
+       CONSTRUCTION DU DOM ODOMETER
+       Chaque colonne contient les chiffres 0-9 empilés verticalement.
+       Pour afficher le chiffre N, on translate la bande de -N * hauteur.
+    ================================================================ */
+    const DIGIT_HEIGHT = 170;
+    const odometerEl = document.getElementById('odometer');
+    const formatted = formatNumber(TARGET_VALUE); // ["4","7"," ","8","3","2"]
+    const digitColumns = []; // références aux bandes de chiffres
+
+    formatted.forEach((ch, idx) => {
+      if (ch === ' ') {
+        const spacer = document.createElement('div');
+        spacer.className = 'odometer-space';
+        odometerEl.appendChild(spacer);
+        digitColumns.push(null); // placeholder
+      } else {
+        const col = document.createElement('div');
+        col.className = 'odometer-digit';
+
+        const strip = document.createElement('div');
+        strip.className = 'digit-strip';
+
+        // Créer les 10 chiffres (0-9)
+        for (let d = 0; d <= 9; d++) {
+          const span = document.createElement('span');
+          span.textContent = d;
+          strip.appendChild(span);
+        }
+
+        col.appendChild(strip);
+        odometerEl.appendChild(col);
+        digitColumns.push(strip);
+      }
+    });
+
+    /* ================================================================
+       ANIMATION DU COMPTEUR (requestAnimationFrame)
+    ================================================================ */
+    let startTime = null;
+    let animationDone = false;
+
+    function setOdometerValue(value) {
+      const chars = formatNumber(value);
+      chars.forEach((ch, idx) => {
+        if (ch === ' ' || !digitColumns[idx]) return;
+        const digit = parseInt(ch, 10);
+        const strip = digitColumns[idx];
+        // Pour l'effet slot machine, on ajoute des tours complets
+        // Le transform translate fait glisser la bande vers le haut
+        strip.style.transform = `translateY(${-digit * DIGIT_HEIGHT}px)`;
+      });
+    }
+
+    // Initialiser à 0
+    setOdometerValue(0);
+
+    function animateCounter(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const t = Math.min(elapsed / DURATION_MS, 1);
+      const easedT = easeCounter(t);
+      const currentValue = easedT * TARGET_VALUE;
+
+      setOdometerValue(currentValue);
+
+      if (t < 1) {
+        requestAnimationFrame(animateCounter);
+      } else {
+        // Figer sur la valeur finale
+        setOdometerValue(TARGET_VALUE);
+        animationDone = true;
+      }
+    }
+
+    /* ================================================================
+       EFFET SLOT MACHINE AMÉLIORÉ
+       Pendant l'animation, les colonnes les moins significatives
+       tournent plus vite (avec des tours supplémentaires)
+    ================================================================ */
+    // On va plutôt piloter chaque colonne indépendamment pour un vrai effet odometer
+    // Les chiffres des unités tournent beaucoup plus vite que les dizaines de milliers
+
+    let prevDigits = [0, 0, null, 0, 0, 0]; // état précédent
+    let totalRotations = [0, 0, null, 0, 0, 0]; // rotations cumulées
+
+    function setOdometerSmooth(value, t) {
+      const chars = formatNumber(value);
+      chars.forEach((ch, idx) => {
+        if (ch === ' ' || !digitColumns[idx]) return;
+        const digit = parseInt(ch, 10);
+        const strip = digitColumns[idx];
+
+        // Pour un vrai effet odometer, les colonnes de faible poids
+        // doivent tourner beaucoup plus. On utilise la valeur brute
+        // pour calculer la position fractionnelle.
+        let offset;
+
+        // Position par colonne en fonction de la valeur
+        const rounded = Math.round(value);
+        const str = rounded.toString().padStart(5, '0');
+        const groups = [];
+        for (let i = str.length; i > 0; i -= 3) {
+          groups.unshift(str.slice(Math.max(0, i - 3), i));
+        }
+        const allDigits = [];
+        for (let g = 0; g < groups.length; g++) {
+          for (const c of groups[g]) allDigits.push(c);
+          if (g < groups.length - 1) allDigits.push(' ');
+        }
+
+        // Trouver l'index réel du chiffre (sans les espaces)
+        let digitIdx = 0;
+        for (let i = 0; i < idx; i++) {
+          if (formatted[i] !== ' ') digitIdx++;
+        }
+
+        // Position fractionnelle pour un smooth scroll
+        // Les unités (dernier chiffre) bougent avec la fraction de la valeur
+        const totalDigits = 5; // 5 chiffres
+        const posFromRight = totalDigits - 1 - digitIdx;
+        const divisor = Math.pow(10, posFromRight);
+        const fractional = (value / divisor) % 10;
+
+        offset = -fractional * DIGIT_HEIGHT;
+        strip.style.transform = `translateY(${offset}px)`;
+      });
+    }
+
+    // Remplacer l'animation du compteur avec l'effet smooth
+    function animateCounterSmooth(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const t = Math.min(elapsed / DURATION_MS, 1);
+      const easedT = easeCounter(t);
+      const currentValue = easedT * TARGET_VALUE;
+
+      setOdometerSmooth(currentValue, t);
+
+      if (t < 1) {
+        requestAnimationFrame(animateCounterSmooth);
+      } else {
+        // Figer exactement sur la valeur finale
+        setOdometerSmooth(TARGET_VALUE, 1);
+        animationDone = true;
+      }
+    }
+
+    /* ================================================================
+       PARTICULES (Canvas 2D)
+    ================================================================ */
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = SCENE_W;
+    canvas.height = SCENE_H;
+
+    const CENTER_X = SCENE_W / 2;
+    const CENTER_Y = SCENE_H / 2;
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        // Naître sur un bord aléatoire
+        const side = Math.floor(Math.random() * 4);
+        switch (side) {
+          case 0: // haut
+            this.x = Math.random() * SCENE_W;
+            this.y = -10;
+            break;
+          case 1: // droite
+            this.x = SCENE_W + 10;
+            this.y = Math.random() * SCENE_H;
+            break;
+          case 2: // bas
+            this.x = Math.random() * SCENE_W;
+            this.y = SCENE_H + 10;
+            break;
+          case 3: // gauche
+            this.x = -10;
+            this.y = Math.random() * SCENE_H;
+            break;
+        }
+
+        this.startX = this.x;
+        this.startY = this.y;
+
+        // Courbe : offset perpendiculaire pour une trajectoire légèrement courbe
+        this.curveOffset = (Math.random() - 0.5) * 300;
+
+        this.size = 3 + Math.random() * 3; // 3-6px
+        this.baseOpacity = 0.3 + Math.random() * 0.3; // 30-60%
+        this.opacity = this.baseOpacity;
+        this.speed = 0.3 + Math.random() * 0.7; // vitesse variable
+        this.progress = 0;
+        this.hasGlow = Math.random() < 0.3; // 30% ont un glow
+        this.alive = true;
+      }
+
+      update(dt) {
+        if (!this.alive) return;
+
+        this.progress += this.speed * dt;
+        if (this.progress >= 1) {
+          this.alive = false;
+          return;
+        }
+
+        const t = this.progress;
+        // Interpolation linéaire du point de départ vers le centre
+        const linearX = this.startX + (CENTER_X - this.startX) * t;
+        const linearY = this.startY + (CENTER_Y - this.startY) * t;
+
+        // Ajouter la courbe (perpendiculaire à la direction)
+        const dx = CENTER_X - this.startX;
+        const dy = CENTER_Y - this.startY;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const perpX = -dy / len;
+        const perpY = dx / len;
+        const curveFactor = Math.sin(t * Math.PI) * this.curveOffset;
+
+        this.x = linearX + perpX * curveFactor;
+        this.y = linearY + perpY * curveFactor;
+
+        // Fade out en approchant du centre
+        const distToCenter = Math.sqrt(
+          (this.x - CENTER_X) ** 2 + (this.y - CENTER_Y) ** 2
+        );
+        const fadeStart = 250;
+        if (distToCenter < fadeStart) {
+          this.opacity = this.baseOpacity * (distToCenter / fadeStart);
+        } else {
+          this.opacity = this.baseOpacity;
+        }
+      }
+
+      draw(ctx) {
+        if (!this.alive || this.opacity <= 0) return;
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+
+        if (this.hasGlow) {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.15})`;
+          ctx.fill();
+        }
+      }
+    }
+
+    // Créer les particules avec des délais de spawn échelonnés
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = new Particle();
+      // Échelonner les départs : certaines commencent déjà en route
+      p.progress = Math.random() * 0.3;
+      particles.push(p);
+    }
+
+    let particleStartTime = null;
+    let lastParticleTime = 0;
+
+    function animateParticles(timestamp) {
+      if (!particleStartTime) particleStartTime = timestamp;
+      const elapsed = timestamp - particleStartTime;
+
+      if (!lastParticleTime) lastParticleTime = timestamp;
+      const dt = (timestamp - lastParticleTime) / 1000; // en secondes
+      lastParticleTime = timestamp;
+
+      ctx.clearRect(0, 0, SCENE_W, SCENE_H);
+
+      particles.forEach(p => {
+        p.update(dt);
+        if (!p.alive && elapsed < DURATION_MS) {
+          p.reset();
+        }
+        p.draw(ctx);
+      });
+
+      if (elapsed < DURATION_MS) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        // Dernier frame : dessiner les particules restantes et figer
+        ctx.clearRect(0, 0, SCENE_W, SCENE_H);
+        particles.forEach(p => {
+          if (p.alive) p.draw(ctx);
+        });
+      }
+    }
+
+    /* ================================================================
+       LANCEMENT
+    ================================================================ */
+    window.addEventListener('load', () => {
+      // Démarrer le scale du compteur
+      document.getElementById('counterWrapper').classList.add('animate');
+      // Démarrer le fade-in du sous-texte
+      document.getElementById('subtitle').classList.add('animate');
+      // Démarrer le compteur
+      requestAnimationFrame(animateCounterSmooth);
+      // Démarrer les particules
+      requestAnimationFrame(animateParticles);
+    });
+  </script>
+</body>
+</html>
