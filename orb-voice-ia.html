@@ -3,261 +3,216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orbe Vocale IA — Ask-It</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Orbe — Flux abstraits | Ask-It</title>
 <style>
+  /* ─────────── Palette DA ───────────
+     Encre      #13181B
+     Crème      #F9F8EF
+     Orange     #FB4F14
+     Parchemin  #E9D6BD
+     Sauge      #A3C0BD
+     Paon       #104A65
+  ──────────────────────────────────── */
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
   :root{
-    --bg:#f4f3f1;
-    --orange:#e8623b;
-    --orange-soft:#f0a085;
-    --teal:#3d7e8f;
-    --teal-deep:#1f5468;
-    --cream:#e9e2cf;
+    --encre:#13181B;
+    --creme:#F9F8EF;
+    --orange:#FB4F14;
+    --parchemin:#E9D6BD;
+    --sauge:#A3C0BD;
+    --paon:#104A65;
   }
 
+  html,body{ height:100%; }
   body{
-    background:
-      radial-gradient(ellipse at 50% 30%, #fbfaf8 0%, var(--bg) 60%, #e9e7e2 100%);
+    background:var(--creme);
+    display:flex;
+    justify-content:center;
+    align-items:center;
     min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
     overflow:hidden;
-    font-family:'DM Sans',sans-serif;
-    gap:54px;
-  }
-
-  /* ─────────── Scène de l'orbe ─────────── */
-  .stage{
-    position:relative;
-    width:420px;
-    height:420px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-  }
-
-  /* Halo lumineux diffus derrière l'orbe */
-  .glow{
-    position:absolute;
-    width:140%;
-    height:140%;
-    border-radius:50%;
-    background:radial-gradient(circle at 50% 45%,
-      rgba(232,98,59,0.22) 0%,
-      rgba(61,126,143,0.16) 45%,
-      transparent 70%);
-    filter:blur(30px);
-    animation:glowPulse 6s ease-in-out infinite;
-    z-index:0;
-  }
-  @keyframes glowPulse{
-    0%,100%{ transform:scale(0.95); opacity:.7; }
-    50%    { transform:scale(1.08); opacity:1;  }
-  }
-
-  /* Anneaux réactifs (style écoute vocale) */
-  .ring{
-    position:absolute;
-    border-radius:50%;
-    border:1.5px solid rgba(61,126,143,0.30);
-    width:300px; height:300px;
-    z-index:1;
-    opacity:0;
-    animation:ringExpand 3.2s ease-out infinite;
-  }
-  .ring.r2{ animation-delay:1.06s; border-color:rgba(232,98,59,0.28); }
-  .ring.r3{ animation-delay:2.13s; border-color:rgba(31,84,104,0.24); }
-  @keyframes ringExpand{
-    0%  { transform:scale(.82); opacity:.55; }
-    70% { opacity:.12; }
-    100%{ transform:scale(1.45); opacity:0; }
   }
 
   /* ─────────── L'orbe ─────────── */
   .orb{
     position:relative;
-    width:300px;
-    height:300px;
+    width:340px;
+    height:340px;
     border-radius:50%;
     overflow:hidden;
-    z-index:2;
-    box-shadow:
-      0 24px 60px rgba(31,84,104,0.28),
-      0 6px 18px rgba(232,98,59,0.18),
-      inset 0 0 60px rgba(255,255,255,0.10);
-    animation:breathe 4.5s ease-in-out infinite;
-    will-change:transform;
-  }
-  @keyframes breathe{
-    0%,100%{ transform:scale(1)    translateY(0); }
-    50%    { transform:scale(1.045) translateY(-4px); }
+    isolation:isolate;
+    background:var(--parchemin);
+    /* ombre très douce pour le détacher du fond crème */
+    box-shadow:0 18px 50px rgba(16,74,101,0.10);
   }
 
-  /* Couches de dégradés animées qui se déplacent et se mélangent */
-  .layer{
+  /* Chaque flux = un dégradé radial flou qui dérive lentement.
+     Tous les blobs sont surdimensionnés et sortent du cadre pour que
+     seules leurs « bordures » colorées traversent le cercle → effet de flux. */
+  .flux{
     position:absolute;
-    inset:-25%;
     border-radius:50%;
-    mix-blend-mode:normal;
+    filter:blur(26px);
     will-change:transform;
   }
 
-  .layer.base{
-    inset:0;
-    border-radius:50%;
-    background:linear-gradient(155deg,
-      var(--orange-soft) 0%,
-      var(--cream) 45%,
-      var(--teal) 80%,
-      var(--teal-deep) 100%);
+  /* Flux Orange (chaud, dominant en haut-gauche comme la référence) */
+  .flux.orange{
+    width:75%; height:75%;
+    top:-8%; left:-6%;
+    background:radial-gradient(circle at center,
+      var(--orange) 0%,
+      rgba(251,79,20,0.55) 38%,
+      rgba(251,79,20,0) 68%);
+    animation:driftOrange 16s ease-in-out infinite;
   }
 
-  .layer.blob-orange{
-    background:radial-gradient(circle at 35% 30%,
-      var(--orange) 0%, rgba(232,98,59,0.0) 55%);
-    animation:floatA 9s ease-in-out infinite;
-  }
-  .layer.blob-teal{
-    background:radial-gradient(circle at 70% 75%,
-      var(--teal-deep) 0%, rgba(31,84,104,0.0) 55%);
-    animation:floatB 11s ease-in-out infinite;
-  }
-  .layer.blob-cream{
-    background:radial-gradient(circle at 65% 50%,
-      var(--cream) 0%, rgba(233,226,207,0.0) 50%);
-    animation:floatC 13s ease-in-out infinite;
-  }
-  .layer.blob-glow{
-    background:radial-gradient(circle at 40% 35%,
-      rgba(255,200,160,0.6) 0%, rgba(255,200,160,0) 40%);
-    animation:floatA 7s ease-in-out infinite reverse;
+  /* Point chaud très lumineux au cœur de l'orange */
+  .flux.hot{
+    width:34%; height:34%;
+    top:8%; left:14%;
+    background:radial-gradient(circle at center,
+      #ffd9b0 0%,
+      rgba(251,79,20,0.7) 45%,
+      rgba(251,79,20,0) 72%);
+    mix-blend-mode:screen;
+    animation:pulseHot 9s ease-in-out infinite;
   }
 
-  @keyframes floatA{
-    0%,100%{ transform:translate(0,0)     scale(1);   }
-    33%    { transform:translate(18%,12%) scale(1.15);}
-    66%    { transform:translate(-10%,8%) scale(.9);  }
-  }
-  @keyframes floatB{
-    0%,100%{ transform:translate(0,0)      scale(1);   }
-    40%    { transform:translate(-16%,-12%) scale(1.2);}
-    70%    { transform:translate(8%,-6%)   scale(.95); }
-  }
-  @keyframes floatC{
-    0%,100%{ transform:translate(0,0)     scale(1);   }
-    50%    { transform:translate(12%,-14%) scale(1.25);}
+  /* Flux Parchemin / crème (clair, milieu droit) */
+  .flux.parchemin{
+    width:80%; height:80%;
+    top:22%; left:38%;
+    background:radial-gradient(circle at center,
+      var(--creme) 0%,
+      rgba(233,214,189,0.6) 40%,
+      rgba(233,214,189,0) 70%);
+    animation:driftParchemin 19s ease-in-out infinite;
   }
 
-  /* Reflet / lumière de surface façon verre */
-  .sheen{
-    position:absolute;
-    inset:0;
-    border-radius:50%;
-    background:radial-gradient(circle at 38% 28%,
-      rgba(255,255,255,0.35) 0%,
-      rgba(255,255,255,0.05) 22%,
-      transparent 45%);
-    z-index:3;
-    pointer-events:none;
-    animation:sheenMove 8s ease-in-out infinite;
-  }
-  @keyframes sheenMove{
-    0%,100%{ transform:translate(0,0); opacity:.9; }
-    50%    { transform:translate(6px,8px); opacity:.6; }
+  /* Flux Sauge (milieu/bas) */
+  .flux.sauge{
+    width:90%; height:90%;
+    top:40%; left:-12%;
+    background:radial-gradient(circle at center,
+      var(--sauge) 0%,
+      rgba(163,192,189,0.5) 42%,
+      rgba(163,192,189,0) 72%);
+    animation:driftSauge 22s ease-in-out infinite;
   }
 
-  /* Grain subtil sur l'orbe (texture comme l'image) */
+  /* Flux Paon (profond, bas-droite) */
+  .flux.paon{
+    width:78%; height:78%;
+    top:48%; left:42%;
+    background:radial-gradient(circle at center,
+      var(--paon) 0%,
+      rgba(16,74,101,0.6) 42%,
+      rgba(16,74,101,0) 72%);
+    animation:driftPaon 18s ease-in-out infinite;
+  }
+
+  /* Voile encre subtil pour densifier le bas */
+  .flux.encre{
+    width:60%; height:60%;
+    top:62%; left:48%;
+    background:radial-gradient(circle at center,
+      rgba(19,24,27,0.45) 0%,
+      rgba(19,24,27,0) 65%);
+    mix-blend-mode:multiply;
+    animation:driftEncre 25s ease-in-out infinite;
+  }
+
+  /* ─────────── Mouvements organiques ───────────
+     Translations + scale lents et désynchronisés = flux fluide. */
+  @keyframes driftOrange{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    25%    { transform:translate(14%,10%) scale(1.12); }
+    50%    { transform:translate(6%,22%) scale(.95); }
+    75%    { transform:translate(-8%,8%) scale(1.08); }
+  }
+  @keyframes pulseHot{
+    0%,100%{ transform:translate(0,0) scale(1); opacity:.9; }
+    50%    { transform:translate(10%,14%) scale(1.25); opacity:1; }
+  }
+  @keyframes driftParchemin{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    33%    { transform:translate(-16%,-10%) scale(1.18); }
+    66%    { transform:translate(-6%,12%) scale(.92); }
+  }
+  @keyframes driftSauge{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    30%    { transform:translate(12%,-14%) scale(1.15); }
+    60%    { transform:translate(20%,4%) scale(.96); }
+  }
+  @keyframes driftPaon{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    25%    { transform:translate(-14%,8%) scale(1.1); }
+    55%    { transform:translate(-20%,-12%) scale(1.2); }
+    80%    { transform:translate(-6%,-4%) scale(.95); }
+  }
+  @keyframes driftEncre{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    50%    { transform:translate(-18%,-16%) scale(1.3); }
+  }
+
+  /* ─────────── Texture grain (comme la référence) ─────────── */
   .grain{
     position:absolute;
     inset:0;
-    border-radius:50%;
-    z-index:4;
+    z-index:5;
     pointer-events:none;
-    opacity:.10;
+    opacity:.55;
     mix-blend-mode:overlay;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:180px 180px;
+    animation:grainShift 1.2s steps(4) infinite;
+  }
+  @keyframes grainShift{
+    0%{ background-position:0 0; }
+    25%{ background-position:-30px 20px; }
+    50%{ background-position:25px -25px; }
+    75%{ background-position:-20px -30px; }
+    100%{ background-position:0 0; }
   }
 
-  /* Égaliseur vocal sous l'orbe */
-  .equalizer{
-    display:flex;
-    align-items:flex-end;
-    gap:7px;
-    height:46px;
-    z-index:2;
+  /* Léger reflet de surface pour le galbe sphérique */
+  .sheen{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    border-radius:50%;
+    pointer-events:none;
+    background:radial-gradient(circle at 36% 30%,
+      rgba(255,255,255,0.18) 0%,
+      rgba(255,255,255,0) 38%);
   }
-  .equalizer span{
-    width:6px;
-    border-radius:6px;
-    background:linear-gradient(var(--orange),var(--teal));
-    animation:eq 1.1s ease-in-out infinite;
-  }
-  .equalizer span:nth-child(1){ animation-delay:-0.9s; height:40%; }
-  .equalizer span:nth-child(2){ animation-delay:-0.7s; height:75%; }
-  .equalizer span:nth-child(3){ animation-delay:-0.5s; height:100%;}
-  .equalizer span:nth-child(4){ animation-delay:-0.3s; height:60%; }
-  .equalizer span:nth-child(5){ animation-delay:-0.1s; height:85%; }
-  .equalizer span:nth-child(6){ animation-delay:-0.6s; height:50%; }
-  .equalizer span:nth-child(7){ animation-delay:-0.4s; height:70%; }
-  @keyframes eq{
-    0%,100%{ transform:scaleY(.35); }
-    50%    { transform:scaleY(1);   }
-  }
-  .equalizer span{ transform-origin:bottom; }
-
-  .label{
-    color:#6a6a66;
-    font-size:14px;
-    font-weight:500;
-    letter-spacing:.18em;
-    text-transform:uppercase;
-    z-index:2;
-  }
-  .dot{
-    display:inline-block;
-    width:7px;height:7px;border-radius:50%;
-    background:var(--orange);
-    margin-right:8px;
-    vertical-align:middle;
-    animation:listen 1.4s ease-in-out infinite;
-  }
-  @keyframes listen{
-    0%,100%{ opacity:.3; transform:scale(.8);}
-    50%    { opacity:1;  transform:scale(1.2);}
+  /* Vignette interne douce sur le contour */
+  .vignette{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    border-radius:50%;
+    pointer-events:none;
+    box-shadow:inset 0 0 30px rgba(19,24,27,0.12);
   }
 </style>
 </head>
 <body>
 
-  <div class="stage">
-    <div class="glow"></div>
-    <div class="ring r1"></div>
-    <div class="ring r2"></div>
-    <div class="ring r3"></div>
+  <div class="orb">
+    <div class="flux sauge"></div>
+    <div class="flux parchemin"></div>
+    <div class="flux paon"></div>
+    <div class="flux orange"></div>
+    <div class="flux hot"></div>
+    <div class="flux encre"></div>
 
-    <div class="orb">
-      <div class="layer base"></div>
-      <div class="layer blob-teal"></div>
-      <div class="layer blob-orange"></div>
-      <div class="layer blob-cream"></div>
-      <div class="layer blob-glow"></div>
-      <div class="sheen"></div>
-      <div class="grain"></div>
-    </div>
+    <div class="grain"></div>
+    <div class="sheen"></div>
+    <div class="vignette"></div>
   </div>
-
-  <div class="equalizer">
-    <span></span><span></span><span></span><span></span>
-    <span></span><span></span><span></span>
-  </div>
-
-  <div class="label"><span class="dot"></span>À l'écoute…</div>
 
 </body>
 </html>
