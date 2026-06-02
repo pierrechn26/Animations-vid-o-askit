@@ -53,7 +53,7 @@
   .flux{
     position:absolute;
     border-radius:50%;
-    filter:blur(26px);
+    filter:blur(34px);
     will-change:transform;
   }
 
@@ -65,7 +65,7 @@
       var(--orange) 0%,
       rgba(251,79,20,0.55) 38%,
       rgba(251,79,20,0) 68%);
-    animation:driftOrange 16s ease-in-out infinite;
+    animation:driftOrange 7s ease-in-out infinite;
   }
 
   /* Point chaud très lumineux au cœur de l'orange */
@@ -77,7 +77,7 @@
       rgba(251,79,20,0.7) 45%,
       rgba(251,79,20,0) 72%);
     mix-blend-mode:screen;
-    animation:pulseHot 9s ease-in-out infinite;
+    animation:pulseHot 5s ease-in-out infinite;
   }
 
   /* Flux Parchemin / crème (clair, milieu droit) */
@@ -88,7 +88,7 @@
       var(--creme) 0%,
       rgba(233,214,189,0.6) 40%,
       rgba(233,214,189,0) 70%);
-    animation:driftParchemin 19s ease-in-out infinite;
+    animation:driftParchemin 8.5s ease-in-out infinite;
   }
 
   /* Flux Sauge (milieu/bas) */
@@ -99,7 +99,7 @@
       var(--sauge) 0%,
       rgba(163,192,189,0.5) 42%,
       rgba(163,192,189,0) 72%);
-    animation:driftSauge 22s ease-in-out infinite;
+    animation:driftSauge 9s ease-in-out infinite;
   }
 
   /* Flux Paon (profond, bas-droite) */
@@ -110,7 +110,7 @@
       var(--paon) 0%,
       rgba(16,74,101,0.6) 42%,
       rgba(16,74,101,0) 72%);
-    animation:driftPaon 18s ease-in-out infinite;
+    animation:driftPaon 7.5s ease-in-out infinite;
   }
 
   /* Voile encre subtil pour densifier le bas */
@@ -121,40 +121,46 @@
       rgba(19,24,27,0.45) 0%,
       rgba(19,24,27,0) 65%);
     mix-blend-mode:multiply;
-    animation:driftEncre 25s ease-in-out infinite;
+    animation:driftEncre 11s ease-in-out infinite;
   }
 
   /* ─────────── Mouvements organiques ───────────
      Translations + scale lents et désynchronisés = flux fluide. */
   @keyframes driftOrange{
     0%,100%{ transform:translate(0,0) scale(1); }
-    25%    { transform:translate(14%,10%) scale(1.12); }
-    50%    { transform:translate(6%,22%) scale(.95); }
-    75%    { transform:translate(-8%,8%) scale(1.08); }
+    20%    { transform:translate(20%,14%) scale(1.18); }
+    40%    { transform:translate(10%,30%) scale(.9); }
+    60%    { transform:translate(-14%,18%) scale(1.15); }
+    80%    { transform:translate(-6%,-8%) scale(1.05); }
   }
   @keyframes pulseHot{
-    0%,100%{ transform:translate(0,0) scale(1); opacity:.9; }
-    50%    { transform:translate(10%,14%) scale(1.25); opacity:1; }
+    0%,100%{ transform:translate(0,0) scale(1); opacity:.85; }
+    35%    { transform:translate(16%,10%) scale(1.3); opacity:1; }
+    70%    { transform:translate(-8%,18%) scale(1.1); opacity:.95; }
   }
   @keyframes driftParchemin{
     0%,100%{ transform:translate(0,0) scale(1); }
-    33%    { transform:translate(-16%,-10%) scale(1.18); }
-    66%    { transform:translate(-6%,12%) scale(.92); }
+    25%    { transform:translate(-22%,-14%) scale(1.22); }
+    50%    { transform:translate(-30%,10%) scale(.88); }
+    75%    { transform:translate(-8%,20%) scale(1.12); }
   }
   @keyframes driftSauge{
     0%,100%{ transform:translate(0,0) scale(1); }
-    30%    { transform:translate(12%,-14%) scale(1.15); }
-    60%    { transform:translate(20%,4%) scale(.96); }
+    25%    { transform:translate(18%,-20%) scale(1.2); }
+    50%    { transform:translate(30%,6%) scale(.9); }
+    75%    { transform:translate(12%,16%) scale(1.1); }
   }
   @keyframes driftPaon{
     0%,100%{ transform:translate(0,0) scale(1); }
-    25%    { transform:translate(-14%,8%) scale(1.1); }
-    55%    { transform:translate(-20%,-12%) scale(1.2); }
-    80%    { transform:translate(-6%,-4%) scale(.95); }
+    20%    { transform:translate(-18%,12%) scale(1.15); }
+    45%    { transform:translate(-28%,-16%) scale(1.28); }
+    70%    { transform:translate(-10%,-24%) scale(.92); }
+    88%    { transform:translate(6%,-6%) scale(1.08); }
   }
   @keyframes driftEncre{
     0%,100%{ transform:translate(0,0) scale(1); }
-    50%    { transform:translate(-18%,-16%) scale(1.3); }
+    33%    { transform:translate(-22%,-20%) scale(1.35); }
+    66%    { transform:translate(14%,-10%) scale(1.1); }
   }
 
   /* ─────────── Texture grain (comme la référence) ─────────── */
