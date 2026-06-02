@@ -150,12 +150,12 @@
 */
 const flux = [
   // sélecteur, amplitude X%, amplitude Y%, vitesse, ampleur taille, rayon de courant %
-  { sel:'.orange',    ax:34, ay:30, sp:0.95, sc:0.20, sw:14 },
-  { sel:'.hot',       ax:40, ay:36, sp:1.30, sc:0.28, sw:20 },
-  { sel:'.parchemin', ax:34, ay:32, sp:1.05, sc:0.22, sw:16 },
-  { sel:'.sauge',     ax:34, ay:30, sp:0.88, sc:0.20, sw:15 },
-  { sel:'.paon',      ax:34, ay:32, sp:1.00, sc:0.21, sw:16 },
-  { sel:'.encre',     ax:30, ay:28, sp:0.80, sc:0.24, sw:13 },
+  { sel:'.orange',    ax:34, ay:30, sp:1.55, sc:0.20, sw:14 },
+  { sel:'.hot',       ax:40, ay:36, sp:2.10, sc:0.28, sw:20 },
+  { sel:'.parchemin', ax:34, ay:32, sp:1.70, sc:0.22, sw:16 },
+  { sel:'.sauge',     ax:34, ay:30, sp:1.45, sc:0.20, sw:15 },
+  { sel:'.paon',      ax:34, ay:32, sp:1.62, sc:0.21, sw:16 },
+  { sel:'.encre',     ax:30, ay:28, sp:1.30, sc:0.24, sw:13 },
 ].map((f, i) => {
   const el = document.querySelector('.flux' + f.sel);
   // jeux de fréquences irrationnelles propres à chaque flux + déphasage
