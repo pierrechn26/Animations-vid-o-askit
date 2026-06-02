@@ -66,13 +66,13 @@
   }
   /* Parchemin — accompagnement */
   .flux.parchemin{
-    width:100%; height:100%; top:12%; left:28%;
+    width:82%; height:82%; top:20%; left:36%;
     background:radial-gradient(circle at center,
       var(--creme) 0%, rgba(233,214,189,0.45) 38%, rgba(233,214,189,0) 68%);
   }
   /* Sauge — accompagnement */
   .flux.sauge{
-    width:108%; height:108%; top:32%; left:-28%;
+    width:95%; height:95%; top:36%; left:-22%;
     background:radial-gradient(circle at center,
       var(--sauge) 0%, rgba(163,192,189,0.4) 40%, rgba(163,192,189,0) 70%);
   }
@@ -150,12 +150,12 @@
 */
 const flux = [
   // sélecteur, amplitude X%, amplitude Y%, vitesse, ampleur taille, rayon de courant %
-  { sel:'.orange',    ax:50, ay:46, sp:1.55, sc:0.22, sw:26 },
-  { sel:'.hot',       ax:56, ay:52, sp:2.10, sc:0.30, sw:32 },
-  { sel:'.parchemin', ax:52, ay:50, sp:1.70, sc:0.24, sw:28 },
-  { sel:'.sauge',     ax:52, ay:48, sp:1.45, sc:0.22, sw:27 },
-  { sel:'.paon',      ax:50, ay:48, sp:1.62, sc:0.23, sw:28 },
-  { sel:'.encre',     ax:46, ay:44, sp:1.30, sc:0.26, sw:24 },
+  { sel:'.orange',    ax:26, ay:24, sp:1.55, sc:0.16, sw:16 },
+  { sel:'.hot',       ax:30, ay:28, sp:2.10, sc:0.24, sw:20 },
+  { sel:'.parchemin', ax:28, ay:26, sp:1.70, sc:0.18, sw:18 },
+  { sel:'.sauge',     ax:28, ay:26, sp:1.45, sc:0.16, sw:17 },
+  { sel:'.paon',      ax:26, ay:26, sp:1.62, sc:0.17, sw:18 },
+  { sel:'.encre',     ax:24, ay:22, sp:1.30, sc:0.20, sw:15 },
 ].map((f, i) => {
   const el = document.querySelector('.flux' + f.sel);
   // jeux de fréquences irrationnelles propres à chaque flux + déphasage
