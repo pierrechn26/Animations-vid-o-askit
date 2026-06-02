@@ -50,7 +50,7 @@
 
   /* Orange — couleur MAJEURE */
   .flux.orange{
-    width:95%; height:95%; top:-12%; left:-12%;
+    width:115%; height:115%; top:-22%; left:-22%;
     background:radial-gradient(circle at center,
       var(--orange) 0%,
       rgba(251,79,20,0.85) 32%,
@@ -66,19 +66,19 @@
   }
   /* Parchemin — accompagnement */
   .flux.parchemin{
-    width:70%; height:70%; top:24%; left:40%;
+    width:85%; height:85%; top:18%; left:34%;
     background:radial-gradient(circle at center,
       var(--creme) 0%, rgba(233,214,189,0.45) 38%, rgba(233,214,189,0) 68%);
   }
   /* Sauge — accompagnement */
   .flux.sauge{
-    width:78%; height:78%; top:42%; left:-10%;
+    width:92%; height:92%; top:38%; left:-20%;
     background:radial-gradient(circle at center,
       var(--sauge) 0%, rgba(163,192,189,0.4) 40%, rgba(163,192,189,0) 70%);
   }
   /* Paon — couleur MAJEURE */
   .flux.paon{
-    width:98%; height:98%; top:44%; left:36%;
+    width:118%; height:118%; top:34%; left:26%;
     background:radial-gradient(circle at center,
       var(--paon) 0%,
       rgba(16,74,101,0.9) 32%,
@@ -149,27 +149,30 @@
   ou qui envahit tout).
 */
 const flux = [
-  // el sélecteur,  amplitude X%, amplitude Y%, vitesse de base
-  { sel:'.orange',    ax:16, ay:14, sp:0.55, sc:0.12 },
-  { sel:'.hot',       ax:18, ay:16, sp:0.80, sc:0.20 },
-  { sel:'.parchemin', ax:15, ay:15, sp:0.62, sc:0.14 },
-  { sel:'.sauge',     ax:16, ay:14, sp:0.50, sc:0.12 },
-  { sel:'.paon',      ax:16, ay:15, sp:0.58, sc:0.13 },
-  { sel:'.encre',     ax:14, ay:13, sp:0.45, sc:0.15 },
+  // sélecteur, amplitude X%, amplitude Y%, vitesse, ampleur taille, rayon de courant %
+  { sel:'.orange',    ax:34, ay:30, sp:0.95, sc:0.20, sw:14 },
+  { sel:'.hot',       ax:40, ay:36, sp:1.30, sc:0.28, sw:20 },
+  { sel:'.parchemin', ax:34, ay:32, sp:1.05, sc:0.22, sw:16 },
+  { sel:'.sauge',     ax:34, ay:30, sp:0.88, sc:0.20, sw:15 },
+  { sel:'.paon',      ax:34, ay:32, sp:1.00, sc:0.21, sw:16 },
+  { sel:'.encre',     ax:30, ay:28, sp:0.80, sc:0.24, sw:13 },
 ].map((f, i) => {
   const el = document.querySelector('.flux' + f.sel);
   // jeux de fréquences irrationnelles propres à chaque flux + déphasage
   const seed = i * 1.732 + 0.4;
   return {
     el,
-    ax:f.ax, ay:f.ay, sc:f.sc,
+    ax:f.ax, ay:f.ay, sc:f.sc, sw:f.sw,
     // 3 fréquences par axe, multipliées par la vitesse de base
     fx:[0.31*f.sp, 0.17*f.sp, 0.07*f.sp],
     fy:[0.23*f.sp, 0.13*f.sp, 0.05*f.sp],
     fs:[0.19*f.sp, 0.11*f.sp],
+    // pulsation du courant tournant (sens alterné selon la parité)
+    fr:0.22*f.sp, dir:(i%2===0?1:-1),
     px:[seed, seed*2.1, seed*3.7],
     py:[seed*1.3, seed*2.6, seed*0.9],
     ps:[seed*1.7, seed*2.9],
+    pr:seed*1.9,
   };
 });
 
@@ -188,8 +191,15 @@ const start = performance.now();
 function tick(now){
   const t = (now - start) / 1000; // secondes
   for (const f of flux){
-    const x  = wave(t, f.fx, f.px) * f.ax;
-    const y  = wave(t, f.fy, f.py) * f.ay;
+    // composante "errante" (somme de sinusoïdes)
+    let x  = wave(t, f.fx, f.px) * f.ax;
+    let y  = wave(t, f.fy, f.py) * f.ay;
+    // composante "courant" : rotation lente du flux autour de son ancrage,
+    // au rayon qui respire → vrai sentiment de courant qui tourne/balaie
+    const ang = t * f.fr * 2 * Math.PI * f.dir + f.pr;
+    const rad = f.sw * (0.6 + 0.4 * Math.sin(t * f.fr * 1.7 + f.pr));
+    x += Math.cos(ang) * rad;
+    y += Math.sin(ang) * rad;
     const sc = 1 + wave(t, f.fs, f.ps) * f.sc;
     f.el.style.transform =
       `translate(${x.toFixed(2)}%, ${y.toFixed(2)}%) scale(${sc.toFixed(3)})`;
